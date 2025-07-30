@@ -8,7 +8,7 @@ A feature-rich, professional-grade markdown editor with live preview, file manag
 
 <img width="1722" height="1074" alt="image" src="https://github.com/user-attachments/assets/9e11b2e3-d217-4db1-9587-fdfd46476cca" />
 
-## ✨ Features
+## Features
 
 ### Text Editing
 - **Word-like Formatting Toolbar**: Quick access to common markdown formatting
