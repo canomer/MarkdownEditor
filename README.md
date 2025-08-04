@@ -128,10 +128,10 @@ The Solution Explorer shows the structure of your current document:
   - [JSZip](https://stuk.github.io/jszip/) - ZIP file creation
 
 ### Browser Compatibility
-- ✅ Chrome 80+
-- ✅ Firefox 75+
-- ✅ Safari 13+
-- ✅ Edge 80+
+- Chrome 80+
+- Firefox 75+
+- Safari 13+
+- Edge 80+
 - Probably in all other browsers and versions
 
 ### Storage
@@ -205,7 +205,7 @@ Themes use CSS variables for easy customization:
 }
 ```
 
-## 📊 Advanced Features
+## Advanced Features
 
 ### Mermaid Integration
 - **Built-in diagram support** for flowcharts, sequence diagrams, and more
