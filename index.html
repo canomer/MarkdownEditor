@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown Editor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="title-bar no-select">
+        <div class="title">📝 Markdown Editor</div>
+    </div>
+
+    <div class="menu-bar no-select">
+        <div class="menu-left">
+        <div class="menu-item" onclick="newFile()">📄 New</div>
+        <div class="menu-item" onclick="saveFile()">💾 Save</div>
+        <div class="menu-item" onclick="showExportModal()">📤 Export</div>
+        <div class="menu-item" onclick="exportAllFiles()">📦 Backup</div>
+        <div class="menu-item" onclick="showImportModal()">📥 Import</div>
+        <div class="menu-item" onclick="showDiagramEditor()">📊 Diagram</div>
+        <div class="menu-item" onclick="showLinkModal()">🔗 Link</div>
+        <div class="menu-item" onclick="splitViewVertical()">⬌ Split</div>
+        <div class="menu-item" onclick="togglePreview()">👁 Preview</div>
+        </div>
+        <div class="menu-right">
+            <div class="theme-switcher">
+                <span style="font-size: 11px; margin-right: 4px;" title="Ctrl+Shift+T">Theme:</span>
+                <button class="theme-button active" id="darkThemeBtn" onclick="setTheme('dark')" title="Dark Theme">🌙 Dark</button>
+                <button class="theme-button" id="lightThemeBtn" onclick="setTheme('light')" title="Light Theme">☀️ Light</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <!-- File Tree Section -->
+            <div class="file-tree-container">
+                <div class="sidebar-header">
+                    📁 Files
+                    <div>
+                        <!--<button class="btn btn-secondary" onclick="toggleTreeView()" title="Toggle Tree View" id="treeViewBtn">🌳</button>-->
+                        <button class="btn btn-secondary" onclick="createNewFolder()" title="New Folder">📁+</button>
+                        <button class="btn btn-secondary" onclick="uploadFile()" title="Upload File">📤</button>
+                    <button class="btn btn-secondary" onclick="newFile()" title="New File">+</button>
+                    </div>
+                </div>
+                <div class="sidebar-content">
+                    <div class="file-upload-area" onclick="uploadFile()" ondrop="handleFileDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                        <div>📁 Drop files here or click to upload</div>
+                        <div style="font-size: 11px; opacity: 0.7; margin-top: 4px;">Supports .md, .txt files</div>
+                    </div>
+                    <input type="file" id="fileInput" accept=".md,.txt,.markdown" multiple onchange="handleFileSelect(event)">
+                    <div class="file-tree" id="fileTree">
+                        <!-- Files will be populated here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Resizable Splitter -->
+            <div class="sidebar-splitter" id="sidebarSplitter"></div>
+            
+            <!-- Solution Explorer Section -->
+            <div class="solution-explorer" id="solutionExplorer">
+                <div class="explorer-header">
+                    📋 Content Explorer
+                    <div>
+                        <button class="btn btn-secondary" onclick="refreshExplorer()" title="Refresh">🔄</button>
+                        <button class="btn btn-secondary" onclick="toggleExplorerView()" title="Change View" id="explorerViewBtn">📖</button>
+                    </div>
+                </div>
+                <div class="explorer-content" id="explorerContent">
+                    <div class="explorer-empty">
+                        <div class="icon">📄</div>
+                        <div>The content structure will appear here when a file is selected</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="editor-container">
+            <div class="tabs" id="tabs">
+                <!-- Tabs will be populated here -->
+            </div>
+
+            <div class="editor-panes">
+                <!-- Editor panes will be dynamically populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+    <div class="status-bar">
+        <div id="statusLeft">Ready</div>
+        <div id="statusRight">Markdown</div>
+                </div>
+
+    <!-- New Folder Modal -->
+    <div class="modal" id="newFolderModal">
+        <div class="modal-content">
+            <div class="modal-header">Create New Folder</div>
+            <input type="text" id="newFolderName" placeholder="Enter folder name" value="">
+            <div style="margin-top: 12px;">
+                <label style="display: block; margin-bottom: 8px; font-size: 13px;">Parent Folder (optional):</label>
+                <select id="parentFolderSelectForFolder" style="width: 100%; background: #3c3c3c; border: 1px solid #464647; color: #cccccc; padding: 8px 12px; border-radius: 2px; font-size: 13px;">
+                    <option value="">Root Directory</option>
+                </select>
+                        </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('newFolderModal')">Cancel</button>
+                <button class="btn" onclick="createNewFolderConfirm()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New File Modal -->
+    <div class="modal" id="newFileModal">
+        <div class="modal-content">
+            <div class="modal-header">Create New File</div>
+            <input type="text" id="newFileName" placeholder="Enter filename (e.g., notes.md)" value="">
+            <div style="margin-top: 12px;">
+                <label style="display: block; margin-bottom: 8px; font-size: 13px;">Parent Folder (optional):</label>
+                <select id="parentFolderSelect" style="width: 100%; background: #3c3c3c; border: 1px solid #464647; color: #cccccc; padding: 8px 12px; border-radius: 2px; font-size: 13px;">
+                    <option value="">Root Directory</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('newFileModal')">Cancel</button>
+                <button class="btn" onclick="createNewFile()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal" id="exportModal">
+        <div class="modal-content">
+            <div class="modal-header">Export File</div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 8px; font-size: 13px;">Export Format:</label>
+                <select id="exportFormat" style="width: 100%; background: #3c3c3c; border: 1px solid #464647; color: #cccccc; padding: 8px 12px; border-radius: 2px; font-size: 13px;">
+                    <option value="md">Markdown (.md)</option>
+                    <option value="txt">Plain Text (.txt)</option>
+                    <option value="pdf">PDF (.pdf)</option>
+                    <option value="html">HTML (.html)</option>
+                </select>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('exportModal')">Cancel</button>
+                <button class="btn" onclick="performExport()">Export</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal" id="importModal">
+        <div class="modal-content">
+            <div class="modal-header">📥 Import Backup</div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 8px; font-size: 13px;">Select backup file to import:</label>
+                <input type="file" id="importFileInput" accept=".json" style="width: 100%; background: #3c3c3c; border: 1px solid #464647; color: #cccccc; padding: 8px 12px; border-radius: 2px; font-size: 13px;" />
+                <div style="margin-top: 8px; font-size: 11px; color: #888; line-height: 1.4;">
+                    ⚠️ <strong>Warning:</strong> This will replace all your current files and folders with the ones from the backup.
+                    <br>Current data will be lost. Make sure to create a backup first if needed.
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('importModal')">Cancel</button>
+                <button class="btn" onclick="performImport()">Import</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Diagram Editor Modal -->
+    <div class="modal" id="diagramModal">
+        <div class="modal-content" style="width: 800px; max-width: 90vw;">
+            <div class="modal-header">📊 Diagram Editor</div>
+            <div style="display: flex; gap: 16px; height: 400px;">
+                <div style="flex: 1; display: flex; flex-direction: column;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 13px;">Diagram Type:</label>
+                    <select id="diagramType" style="width: 100%; background: #3c3c3c; border: 1px solid #464647; color: #cccccc; padding: 8px 12px; border-radius: 2px; font-size: 13px; margin-bottom: 12px;" onchange="updateDiagramTemplate()">
+                        <option value="flowchart">Flowchart</option>
+                        <option value="sequence">Sequence Diagram</option>
+                        <option value="class">Class Diagram</option>
+                        <option value="json-flowchart">JSON to Flowchart</option>
+                    </select>
+                    <label style="display: block; margin-bottom: 8px; font-size: 13px;">Input:</label>
+                    <textarea id="diagramInput" placeholder="Enter diagram code or JSON..." style="flex: 1; width: 100%; background: #3c3c3c; border: 1px solid #464647; color: #cccccc; padding: 12px; border-radius: 2px; font-family: 'Consolas', monospace; font-size: 12px; resize: none; line-height: 1.4;"></textarea>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 13px;">Preview:</label>
+                    <div id="diagramPreview" style="flex: 1; background: #2d2d30; border: 1px solid #464647; border-radius: 2px; padding: 12px; overflow: auto; text-align: center; display: flex; align-items: center; justify-content: center; color: #6f6f6f;">
+                        Select a diagram type and enter code to see preview
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions" style="margin-top: 16px;">
+                <button class="btn btn-secondary" onclick="closeModal('diagramModal')">Cancel</button>
+                <button class="btn" onclick="insertDiagram()">Insert Diagram</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link Modal -->
+    <div class="modal" id="linkModal">
+        <div class="modal-content">
+            <div class="modal-header">🔗 Insert Link</div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 8px; font-size: 13px;">Link Type:</label>
+                <select id="linkType" style="width: 100%; background: #3c3c3c; border: 1px solid #464647; color: #cccccc; padding: 8px 12px; border-radius: 2px; font-size: 13px;" onchange="updateLinkOptions()">
+                    <option value="internal">Internal File Link</option>
+                    <option value="external">External URL</option>
+                </select>
+            </div>
+            <div id="internalLinkOptions">
+                <label style="display: block; margin-bottom: 8px; font-size: 13px;">Select File:</label>
+                <select id="targetFileSelect" style="width: 100%; background: #3c3c3c; border: 1px solid #464647; color: #cccccc; padding: 8px 12px; border-radius: 2px; font-size: 13px; margin-bottom: 12px;">
+                    <option value="">-- Select a file --</option>
+                </select>
+                <div style="font-size: 12px; color: #888; margin-bottom: 12px;">
+                    💡 Internal links use [[filename]] syntax and can be clicked in preview to navigate between files.
+                </div>
+            </div>
+            <div id="externalLinkOptions" style="display: none;">
+                <label style="display: block; margin-bottom: 8px; font-size: 13px;">URL:</label>
+                <input type="text" id="externalUrl" placeholder="https://example.com" style="width: 100%; background: #3c3c3c; border: 1px solid #464647; color: #cccccc; padding: 8px 12px; border-radius: 2px; font-size: 13px; margin-bottom: 12px;">
+                <label style="display: block; margin-bottom: 8px; font-size: 13px;">Display Text:</label>
+                <input type="text" id="linkText" placeholder="Link text" style="width: 100%; background: #3c3c3c; border: 1px solid #464647; color: #cccccc; padding: 8px 12px; border-radius: 2px; font-size: 13px; margin-bottom: 12px;">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('linkModal')">Cancel</button>
+                <button class="btn" onclick="insertLink()">Insert Link</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rename Modal -->
+    <div class="modal" id="renameModal">
+        <div class="modal-content">
+            <div class="modal-header">✏️ Rename Item</div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 8px; font-size: 13px;">Current Name:</label>
+                <div id="currentItemName" style="background: #2d2d30; border: 1px solid #464647; color: #888; padding: 8px 12px; border-radius: 2px; font-size: 13px; margin-bottom: 12px;"></div>
+                <label style="display: block; margin-bottom: 8px; font-size: 13px;">New Name:</label>
+                <input type="text" id="newItemName" placeholder="Enter new name" style="width: 100%; background: #3c3c3c; border: 1px solid #464647; color: #cccccc; padding: 8px 12px; border-radius: 2px; font-size: 13px;">
+                <div id="renameHelp" style="font-size: 12px; color: #888; margin-top: 8px;"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal('renameModal')">Cancel</button>
+                <button class="btn" onclick="confirmRename()">Rename</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="scriptd.js"></script>
+</body>
+</html> 
