@@ -49,7 +49,7 @@ A feature-rich, professional-grade markdown editor with live preview, file manag
 - No installation required - it's a single HTML file!
 
 ### Quick Start
-1. Download the `md_editor5.html` file
+1. Download the `MarkDownEditor.html` file
 2. Open it in your web browser
 3. Start creating markdown files immediately
 
